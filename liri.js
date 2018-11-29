@@ -3,20 +3,31 @@ var axios = require("axios");
 var Spotify = require("node-spotify-api");
 var keys = require("./keys");
 var fs = require("fs");
-var request = require('request');
 var inquirer = require('inquirer');
+
+//Setting the template for output
+var space = "\n";
+var header = "====== Extraordinary Liri has found this based on your query ...======";
+var footer = "================= Thank you for using Liri by W.B ====================";
+
+//Function to write to log
+function writeToLog(output) {
+    fs.appendFile("log.txt", space + output, function(err) {
+        if(err) {
+            console.log(err);
+            return;
+        }
+    })
+};
 
 //initialize the spotify api with our client id and secret from .spotify
 var spotify = new Spotify(keys.spotify);
 
-var command = process.argv[2];
-var query = process.argv[3];
-
-
+//Spotify request
 function getSongInfo(songName) {
 
-    if (songName === undefined) {
-        songName = "papercut";
+    if ( songName === undefined ) {
+        songName = "The Sign";
     }
 
     spotify.search(
@@ -33,36 +44,74 @@ function getSongInfo(songName) {
 
             var songs = data.tracks.items;
 
-            //NEED HELP
             for (var i = 0; i < songs.length; i++) {
-                console.log(data);
-                console.log("artist(s): " + songs[i].album.artists[0].name);
-                console.log("song name: " + songs[i].name);
-                console.log("preview song: " + songs[i].preview_url);
-                console.log("album: " + songs[i].album.name);
-                console.log("-----------------------------------");
+                // console.log(data);
+                
+                //Template for search result
+                output = space + header + space + space + 
+                space + "Song Title                    : " + songs[i].name + 
+                space + "Artist(s)                     : " + songs[i].album.artists[0].name + 
+                space + "Album name                    : " + songs[i].album.name +
+                space + "Click on link to preview song : " + songs[i].preview_url + 
+                space + space  + space + footer;
+
+                console.log(output);
+                writeToLog(output);
             }
         }
     );
-}
+};
 
-function getConcertInfo(artistName) {
-    var queryURL = "https://rest.bandsintown.com/artists/" + artistName + "/events?app_id=codingbootcamp"
-    console.log(queryURL);
-
-    if (artistName === undefined) {
-        console.log("Please input artist name.")
+//OMDB request
+function getMovieInfo(movieName) {
+    
+    if ( movieName === undefined ) {
+        movieName = "Mr Nobody";
     };
 
-
+    var queryURL = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
+    
     axios
         .get(queryURL)
         .then(function (response) {
-            // var concert = response.data[i];
-            // //NEED HELP
-            // for ( var i = 0; i < concert.length; i++) {
-            //     console.log(concert.venue.name);
-            // }
+            var movie = response.data;
+            // console.log(movie);
+
+            //Template for search result
+            output = space + header + space + space +
+            space + "Movie Title             : " + movie.Title +
+            space + "Released                : " + movie.Year +
+            space + "IMDB Ratings            : " + movie.imdbRating +
+            space + "Rotten Tomatoes Ratings : " + movie.Ratings[1].Value +
+            space + "Country it was produced : " + movie.Country +
+            space + "Language                : " + movie.Language +
+            space + "Starring                : " + movie.Actors +
+            space + "Box Office              : " + movie.BoxOffice +
+            space + "Awards                  : " + movie.Awards +
+            space + "Go to their website     : " + movie.Website +
+            space + "Plot                    : " + movie.Plot +
+            space + space  + space + footer;
+
+            console.log(output);
+            writeToLog(output);
+
+        });
+};
+
+//Bands in town request
+function getConcertInfo(artistName) {
+    
+    if (artistName === undefined ) {
+        artistName = "drake";
+    };
+    
+    var queryURL = "https://rest.bandsintown.com/artists/" + artistName + "/events?app_id=codingbootcamp";
+
+    console.log(queryURL);
+    axios
+        .get(queryURL)
+        .then(function (response) {
+
             //convert date into mm/dd/yyyy
             var datetime =  new Date(response.data[0].datetime);
             var month = datetime.getMonth() + 1;
@@ -70,57 +119,40 @@ function getConcertInfo(artistName) {
             var year = datetime.getFullYear();
             var date = month + "/" + day + "/" + year;
 
+            // console.log(response.data[0]);
 
-            console.log(response.data[0])
-            console.log("Lineup: " + response.data[0].lineup);
-            console.log("Venue Name: " + response.data[0].venue.name);
-            console.log("Venue Location: " + response.data[0].venue.city + ", " + response.data[0].venue.country);
-            console.log("Concert Date: " + date);
+            //Template for search result
+            output = space + header + space + space + 
+            space + "Performing in this event   : " + response.data[0].lineup +
+            space + "Venue Name                 : " + response.data[0].venue.name + 
+            space + "Venue Location             : " + response.data[0].venue.city + ", " + response.data[0].venue.country + 
+            space + "Concert Date               : " + date +
+            space + space  + space + footer;
+
+            console.log(output);
+            writeToLog(output);
         })
+};
 
-}
+//DO WHAT IT SAYS
+function doWhatItSays() {
+    // Reads the random text file and passes it to the spotify function
+    fs.readFile("random.txt", "utf8", function(error, data) {
+        getSongInfo(data);
+    });
+};
 
-function getMovieInfo(movieName) {
-    var queryURL = "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=short&apikey=trilogy";
-
-    if (movieName === undefined) {
-        console.log("please insert movie title..")
-    };
-
-    axios
-        .get(queryURL)
-        .then(function (response) {
-            var movie = response.data;
-            // console.log(response);
-            console.log("Title: " + movie.Title);
-            console.log("Year: " + movie.Year);
-            console.log("IMDB Ratings: " + movie.imdbRating);
-            console.log("Rotten Tomatoes Ratings: " + movie.Ratings[1].Value)
-            console.log("Country it was produced: " + movie.Country)
-            console.log("Language: " + movie.Language)
-            console.log("Plot: " + movie.Plot)
-            console.log("Starring: " + movie.Actors)
-        });
-}
-
-// if ( command === "spotify-this-song") {
-//     getSongInfo(query);
-// } else if ( command === "concert-this") {
-//     getConcertInfo(query);
-// } else if ( command === "movie-this") {
-//     getMovieInfo(query);
-// }
-
+//Set a new variable for questions to be inputted in inquirer
 var questions = [{
     type: 'list',
     name: 'programs',
     message: 'What would you like to do?',
-    choices: ['Spotify', 'Movie', 'Concert', 'Do what it says']
+    choices: ['Movie', 'Spotify', 'Concert', 'Do what it says']
 },
 {
     type: 'input',
     name: 'movieChoice',
-    message: 'What\'s the name of the movie you would like?',
+    message: 'What\'s the name of the movie would you like to search? ',
     when: function (answers) {
         return answers.programs == 'Movie';
     }
@@ -128,7 +160,7 @@ var questions = [{
 {
     type: 'input',
     name: 'songChoice',
-    message: 'What\'s the name of the song you would like?',
+    message: 'What\'s the name of the song would you like to search? ',
     when: function (answers) {
         return answers.programs == 'Spotify';
     }
@@ -136,16 +168,17 @@ var questions = [{
 {
     type: 'input',
     name: 'concertChoice',
-    message: 'What\'s the artist of the concert you would like?',
+    message: 'Who would you like to see perform live? ',
     when: function (answers) {
         return answers.programs == 'Concert';
     }
-},
+}
 ];
 
+//Instead using process.argv, we simplify the input using inquirer. Less work for the users.
 inquirer
     .prompt(questions)
-    .then(answers => {
+    .then(function(answers) {
         // Depending on which program the user chose to run it will do the function for that program
         switch (answers.programs) {
             case 'Spotify':
