@@ -152,7 +152,7 @@ var questions = [{
 {
     type: 'input',
     name: 'movieChoice',
-    message: 'What\'s the name of the movie would you like to search? ',
+    message: 'What\'s the name of the movie you would like to search? ',
     when: function (answers) {
         return answers.programs == 'Movie';
     }
@@ -160,7 +160,7 @@ var questions = [{
 {
     type: 'input',
     name: 'songChoice',
-    message: 'What\'s the name of the song would you like to search? ',
+    message: 'What\'s the name of the song you would like to search? ',
     when: function (answers) {
         return answers.programs == 'Spotify';
     }
@@ -168,7 +168,7 @@ var questions = [{
 {
     type: 'input',
     name: 'concertChoice',
-    message: 'Who would you like to see perform live? ',
+    message: 'Who would you like to see perform live next? ',
     when: function (answers) {
         return answers.programs == 'Concert';
     }
